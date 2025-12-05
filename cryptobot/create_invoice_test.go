@@ -42,7 +42,9 @@ func TestCreateInvoice(t *testing.T) {
 	gock.New(testnetAPIURL).
 		Get("/createInvoice").
 		MatchHeader(apiTokenHeaderName, testToken).
+		MatchParam("currency_type", Crypto).
 		MatchParam("asset", USDT).
+		MatchParam("accepted_assets", "USDT,USDC").
 		MatchParam("amount", "100").
 		MatchParam("description", "some description").
 		MatchParam("hidden_message", "some message").
@@ -56,7 +58,9 @@ func TestCreateInvoice(t *testing.T) {
 		JSON(expectedResponse)
 
 	invoice, err := c.CreateInvoice(CreateInvoiceRequest{
+		CurrencyType:   Crypto,
 		Asset:          USDT,
+		AcceptedAssets: []string{USDT, USDC},
 		Amount:         "100",
 		Description:    "some description",
 		HiddenMessage:  "some message",

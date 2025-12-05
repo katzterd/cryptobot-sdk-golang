@@ -4,14 +4,31 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type CreateInvoiceRequest struct {
-	// Currency code. Currently, can be “BTC”, “TON”, “ETH”, “USDT”, “USDC” or “BUSD”.
+	// ​Optional. Type of the price, can be “crypto” or “fiat”. Defaults to crypto.
+	CurrencyType string `json:"currency_type"`
+
+	// Optional. Required if currency_type is “crypto”. Cryptocurrency alphabetic code.
+	// Supported assets: “USDT”, “TON”, “BTC”, “ETH”, “LTC”, “BNB”, “TRX” and “USDC”.
 	Asset string `json:"asset"`
+
+	// ​Optional. Required if currency_type is “fiat”. Fiat currency code.
+	// Supported fiat currencies: “USD”, “EUR”, “RUB”, “BYN”, “UAH”, “GBP”, “CNY”, “KZT”, “UZS”, “GEL”, “TRY”, “AMD”, “THB”, “INR”, “BRL”, “IDR”, “AZN”, “AED”, “PLN” and “ILS".
+	Fiat string `json:"fiat"`
+
+	// ​Optional. List of cryptocurrency alphabetic codes separated comma. Assets which can be used to pay the invoice. Available only if currency_type is “fiat”.
+	// Supported assets: “USDT”, “TON”, “BTC”, “ETH”, “LTC”, “BNB”, “TRX” and “USDC” (and “JET” for testnet). Defaults to all currencies.
+	AcceptedAssets []string `json:"accepted_assets"`
 
 	// Amount of the invoice in float. For example: 125.50
 	Amount string `json:"amount"`
+
+	// ​Optional. The asset that will be attempted to be swapped into after the user makes a payment (the swap is not guaranteed).
+	// Supported assets: "USDT", "TON", "TRX", "ETH", "SOL", "BTC", "LTC".
+	SwapTo string `json:"swap_to"`
 
 	// Optional. Description for the invoice. User will see this description when they pay the invoice. Up to 1024 characters.
 	Description string `json:"description"`
@@ -27,8 +44,8 @@ type CreateInvoiceRequest struct {
 	// callback – “Return”
 	PaidBtnName string `json:"paid_btn_name"`
 
-	// Optional. Required if paid_btn_name is used.URL to be opened when the button is pressed.
-	// You can set any success link (for example, a link to your bot). Starts with https or http.
+	// Optional. Required if paid_btn_name is specified. URL opened using the button which will be presented to a user after the invoice is paid.
+	// You can set any callback link (for example, a success link or link to homepage). Starts with https or http.
 	PaidBtnUrl string `json:"paid_btn_url"`
 
 	// Optional. Any data you want to attach to the invoice (for example, user ID, payment ID, ect). Up to 4kb.
@@ -52,8 +69,20 @@ type createInvoiceResponse struct {
 // Use this method to create a new invoice. On success, returns an object of the created invoice.
 func (c *Client) CreateInvoice(createInvoiceRequest CreateInvoiceRequest) (*Invoice, error) {
 	responseBodyReader, err := c.request("createInvoice", func(q url.Values) url.Values {
-		q.Add("asset", createInvoiceRequest.Asset)
 		q.Add("amount", createInvoiceRequest.Amount)
+		switch createInvoiceRequest.CurrencyType {
+		case "", Crypto:
+			q.Add("asset", createInvoiceRequest.Asset)
+		case Fiat:
+			q.Add("currency_type", Fiat)
+			q.Add("fiat", createInvoiceRequest.Fiat)
+		}
+		if createInvoiceRequest.AcceptedAssets != nil {
+			q.Add("accepted_assets", strings.Join(createInvoiceRequest.AcceptedAssets, ","))
+		}
+		if createInvoiceRequest.SwapTo != "" {
+			q.Add("swap_to", createInvoiceRequest.SwapTo)
+		}
 		if createInvoiceRequest.Description != "" {
 			q.Add("description", createInvoiceRequest.Description)
 		}

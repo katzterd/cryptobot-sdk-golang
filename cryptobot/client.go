@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -79,7 +78,7 @@ func (c *Client) request(path string, queryModifierFunc func(q url.Values) url.V
 }
 
 func (c *Client) decodeResponse(responseBodyReader io.Reader, targetPointer any) error {
-	responseBody, err := ioutil.ReadAll(responseBodyReader)
+	responseBody, err := io.ReadAll(responseBodyReader)
 	if err != nil {
 		return fmt.Errorf("error while decoding response: %w", err)
 	}
