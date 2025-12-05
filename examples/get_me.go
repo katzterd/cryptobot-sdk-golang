@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/arthurshafikov/cryptobot-sdk-golang/cryptobot"
+	"github.com/katzterd/cryptobot-sdk-golang/cryptobot"
 )
 
 func getMe(client *cryptobot.Client) {
